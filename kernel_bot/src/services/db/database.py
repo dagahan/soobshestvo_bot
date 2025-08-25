@@ -1,5 +1,5 @@
 import colorama
-from bs_models import Base
+from .models.base_model import Base
 from loguru import logger
 from typing import AsyncIterator
 from contextlib import asynccontextmanager
