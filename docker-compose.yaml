@@ -1,0 +1,57 @@
+name: kernel_bot
+
+
+services:
+  kernel_bot:
+    build:
+      context: ./kernel_bot
+      dockerfile: dockerfile
+    image: kernel_bot-${COMPOSE_PROJECT_NAME}
+    container_name: kernel_bot-${COMPOSE_PROJECT_NAME}
+    env_file: .env
+    environment:
+      RUNNING_INSIDE_DOCKER: 1
+      COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
+    ports:
+      - "${KERNEL_BOT_PORT}:${KERNEL_BOT_PORT}"
+    networks:
+      - kernel_bot_net
+    restart: ${DOCKER_CONTAINERS_RESTART}
+    develop:
+      watch:
+        - action: rebuild
+          path: ./
+
+
+  postgres:
+    build:
+      context: ./postgres
+      dockerfile: dockerfile
+    image: postgres-${COMPOSE_PROJECT_NAME}
+    container_name: postgres-${COMPOSE_PROJECT_NAME}
+    env_file: .env
+    environment:
+      RUNNING_INSIDE_DOCKER: 1
+      COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    networks:
+      - kernel_bot_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    restart: ${DOCKER_CONTAINERS_RESTART}
+    develop:
+      watch:
+        - action: rebuild
+          path: ./
+
+
+networks:
+  kernel_bot_net:
+    driver: bridge
+    name: kernel_bot_net
